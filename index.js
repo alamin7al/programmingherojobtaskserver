@@ -20,87 +20,15 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run() {
     try {
         await client.connect()
-        const database = client.db('programming')
-        const foodCollection = database.collection("FoodItem");
-        const studentCollection = database.collection("Student");
-        const distributionCollection = database.collection("Distribution");
+        const database = client.db('watchList')
+        const watchcollection = database.collection('watch')
+        const detailsollection = database.collection('details')
+        const revewsollection = database.collection('revew')
+        const profileollection = database.collection('profile')
 
-console.log('j');
-        // Post Food API
 
-        app.post('/foods', async (req, res) => {
-            const result = await foodCollection.insertOne(req.body)
-            res.send(result)
-        })
-
-        // Get all food api
-
-        app.get('/foods', async (req, res) => {
-            const cursor = foodCollection.find({});
-            const page = req.query.page;
-            const size = parseInt(req.query.size);
-            let payload;
-            const count = await cursor.count();
-
-            if (page) {
-                payload = await cursor.skip(page * size).limit(size).toArray();
-            }
-            else {
-                payload = await cursor.toArray();
-            }
-
-            res.send({
-                count,
-                payload
-            });
-        }) 
-
-        // get single food api
-        app.get('/foods/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: ObjectId(id) }
-            const payload = await foodCollection.findOne(query)
-            res.send(payload)
-        })
-
-        // update food api
-        app.put('/foods/:id', async (req, res) => {
-            const cursor = req.body;
-            const id = req.params.id;
-            const query = { _id: ObjectId(id) }
-            const options = { upsert: true };
-            const updateDoc = await { $set: { food: cursor.food, price: cursor.price } }
-            const payload = await foodCollection.updateOne(query, updateDoc, options)
-            res.send(payload)
-        })
-
-        // food delete api
-        app.delete('/foods/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: ObjectId(id) }
-            const result = await foodCollection.deleteOne(query)
-            res.send(result)
-        })
-
-        // add student api 
-        app.post('/students', async (req, res) => {
-            const roll = req.body.roll;
-            console.log(roll);
-            const query = { roll: roll }
-            const payload = await studentCollection.findOne(query)
-            if (payload) {
-                res.send(payload)
-            }
-            else {
-                const result = await studentCollection.insertOne(req.body)
-                res.send(result)
-            }
-
-        })
-
-        // get all student 
-        app.get('/students', async (req, res) => {
-            const cursor = studentCollection.find({});
+        app.get('/watch', async (req, res) => {
+            const cursor = watchcollection.find({});
             const page = req.query.page;
             const size = parseInt(req.query.size);
             let payload;
@@ -119,61 +47,157 @@ console.log('j');
             });
         })
 
-        // get single student
-        app.get('/students/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: ObjectId(id) }
-            const payload = await studentCollection.findOne(query)
-            res.send(payload)
-        })
+
+        app.post('/watch', async (req, res) => {
+            const service = req.body;
+            // console.log('hit the post api', service);
+
+            const result = await watchcollection.insertOne(service);
+            // console.log(result);
+            res.send(result)
+        });
 
 
-        // student update
-        app.put('/students/:id', async (req, res) => {
-            const student = req.body;
-            const id = req.params.id;
-            const query = { _id: ObjectId(id) }
-            const options = { upsert: true };
-            const updateDoc = await { $set: { fullName: student.fullName, roll: student.roll, age: student.age, class: student.class, hall: student.hall } }
-            const payload = await studentCollection.updateOne(query, updateDoc, options)
-            res.send(payload)
-        })
 
-        // student status update api 
-        app.put(`/student/:id`, async (req, res) => {
+
+
+        app.put('/watch/:id', async (req, res) => {
             const id = req.params.id
-            const status = req.query.status;
+            const updateUser = req.body
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true }
+            const updateDoc = {
+                $set: {
+                    name: updateUser.name,
+                    title: updateUser.title,
+                    price: updateUser.price,
+                    desc: updateUser.desc,
+                    rating: updateUser.rating,
+                }
+            }
+            const result = await watchcollection.updateOne(filter, updateDoc, options)
+            res.send(result)
+        })
+        app.get('/watch/:id', async (req, res) => {
+            const id = req.params.id
             const query = { _id: ObjectId(id) }
-            const options = { upsert: true };
-            const updateDoc = await { $set: { status: status } }
-            const payload = await studentCollection.updateOne(query, updateDoc, options)
-            res.send(payload)
+            const user = await watchcollection.findOne(query)
+            res.send(user)
         })
 
-        // student delete api
-        app.delete('/students/:id', async (req, res) => {
-            const id = req.params.id;
+        app.get('/single/:id', async (req, res) => {
+            const id = req.params.id
             const query = { _id: ObjectId(id) }
-            const result = await studentCollection.deleteOne(query)
+            const user = await watchcollection.findOne(query)
+            res.send(user)
+        })
+
+
+
+
+        app.get('/singleemail', async (req, res) => {
+            const email = req.query.email
+            // console.log(email);
+            const query = { email: email }
+            const cursor = detailsollection.find(query)
+            const user = await cursor.toArray()
+            res.json(user)
+        })
+
+        app.delete('/singleemail/:id', async (req, res) => {
+            const id = req.params.id
+            // console.log(id);
+            const query = { _id: ObjectId(id) }
+            const result = await detailsollection.deleteOne(query)
+            res.send(result)
+        })
+        app.post('/details', async (req, res) => {
+            const service = req.body;
+            // console.log('hit the post api', service);
+
+            const result = await detailsollection.insertOne(service);
+            res.send(result)
+        });
+
+        app.get('/details', async (req, res) => {
+            const cursor = detailsollection.find({})
+            const user = await cursor.toArray()
+            res.send(user)
+        })
+        app.delete('/details/:id', async (req, res) => {
+            const id = req.params.id
+            const quarry = { _id: ObjectId(id) }
+            const deleteData = await detailsollection.deleteOne(quarry)
+            res.send(deleteData)
+
+        })
+
+
+
+        app.get('/revew', async (req, res) => {
+            const cursor = revewsollection.find({})
+            const user = await cursor.toArray()
+            res.send(user)
+        })
+        app.post('/revew', async (req, res) => {
+            const service = req.body;
+            // console.log('hit the post api', service);
+
+            const result = await revewsollection.insertOne(service);
+            res.send(result)
+        });
+
+
+        app.post('/profile', async (req, res) => {
+            const service = req.body;
+            // console.log('hit the post api', service);
+
+            const result = await profileollection.insertOne(service);
+            console.log(result);
+            res.send(result)
+        });
+
+
+        app.get('/profile', async (req, res) => {
+            const email = req.query.email
+            // console.log(email);
+            const query = { email: email }
+            const cursor = profileollection.find(query)
+            const user = await cursor.toArray()
+            res.json(user)
+        })
+
+        app.put('/profile/:id', async (req, res) => {
+            const id = req.params.id
+            const updateUser = req.body
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true }
+            const updateDoc = {
+                $set: {
+                    name: updateUser.name,
+                    phone: updateUser.phone,
+                    price: updateUser.price,
+                    city: updateUser.city,
+                    email: updateUser.email,
+                }
+            }
+            const result = await profileollection.updateOne(filter, updateDoc, options)
+            console.log(result);
             res.send(result)
         })
 
-        // food serve api
-        app.post(`/food/serve`, async (req, res) => {
-            const roll = req.body.studentId;
-            const shift = req.body.shift;
-            let today = new Date().toLocaleDateString()
-            const query = { studentId: roll }
-            const result = await distributionCollection.findOne(query)
-            let payload;
-            if (result?.date === today && result?.shift === shift) {
-                res.send({ message: "Already served", statusCode: 404 })
-            }
-            else {
-                payload = await distributionCollection.insertOne(req.body)
-                res.send(payload)
-            }
+        app.get('/profile/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: ObjectId(id) }
+            const user = await profileollection.findOne(query)
+            res.send(user)
         })
+
+
+
+
+
+        console.log('hello');
     }
     finally {
         // await client.close()
